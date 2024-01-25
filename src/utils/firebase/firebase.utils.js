@@ -9,7 +9,14 @@ import {
   signOut,
   onAuthStateChanged,
 } from 'firebase/auth';
-import { getFirestore, doc, getDoc, setDoc } from 'firebase/firestore';
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc,
+  collection,
+  writeBatch,
+} from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey: 'AIzaSyCI-uD4HrmpR8gYdRrTGOhaeo4Xwa3criI',
@@ -35,6 +42,28 @@ export const signInWithGoogleRedirect = () =>
   signInWithRedirect(auth, googleProvider);
 
 export const db = getFirestore();
+
+export const addCollectionAndDocuments = async (
+  collectionKey,
+  objectsToAdd,
+  field = 'title'
+) => {
+  const collectionRef = collection(db, collectionKey);
+  const batch = writeBatch(db);
+
+  objectsToAdd.forEach((object) => {
+    if (object && object.title) {
+      const title = object.title.toLowerCase();
+      const docRef = doc(collectionRef, title);
+      batch.set(docRef, object);
+    } else {
+      console.error('Ошибка: object или object.title не определены');
+    }
+  });
+
+  await batch.commit();
+  console.log('done');
+};
 
 export const createUserDocumentFromAuth = async (
   userAuth,
